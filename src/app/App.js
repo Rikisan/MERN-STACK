@@ -7,30 +7,47 @@ class App extends Component {
         this.state= {
             title: '',
             description: '',
-            tasks: []
+            tasks: [],
+            _id: ''
         };
         this.handleChange = this.handleChange.bind(this);
         this.addTask = this.addTask.bind(this);
     }
 
     addTask(e) {
-        fetch('/api/tasks', {
-            method: 'POST',
-            body: JSON.stringify(this.state),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data)
-            M.toast({html: 'Task Saved'});
-            this.setState({title:'', description:''});
+        if(this.state._id) {
+            fetch(`/api/tasks/${this.state._id}` , {
+                method: 'PUT',
+                body: JSON.stringify(this.state),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => console.log(data));
+            M.toast({html: 'Task Modified'});
+            this.setState({title: '', description: '', _id:''});
             this.fetchTasks();
-
-        })    
-        .catch(err => console.error(err));
+        }
+        else {
+            fetch('/api/tasks', {
+                method: 'POST',
+                body: JSON.stringify(this.state),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                M.toast({html: 'Task Saved'});
+                this.setState({title: '', description: '', _id:''});
+                this.fetchTasks();
+            })    
+            .catch(err => console.error(err));
+        }
 
         e.preventDefault();
     }
@@ -60,10 +77,24 @@ class App extends Component {
             .then(res => res.json())
             .then(data => {
                 console.log(data);
+                this.setState({title: '', description: '', _id:''});
                 M.toast({html: 'Task Deleted'});
                 this.fetchTasks();
         });
         }
+    }
+
+    editTask(id) {
+        fetch(`/api/tasks/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);
+                this.setState({
+                    title: data.title,
+                    description: data.description,
+                    _id: data._id
+                })
+            });
     }
 
     handleChange(e) {
